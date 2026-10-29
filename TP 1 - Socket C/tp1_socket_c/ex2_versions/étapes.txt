@@ -1,0 +1,469 @@
+#####################################################################################
+###########################  EXERCICE 2 - VERSION 1  ################################
+################  COMMUNICATION A DISTANCE (MESSAGES & CONTROLE)  ###################
+#####################################################################################
+
+Compilation :
+    make ex2_v1
+
+Objectif :
+    Permettre a deux machines distinctes (Machine 1 = Serveur, Machine 2 = Client)
+    de communiquer a distance : envoi de messages textes, commandes systeme (ping, date, info),
+    avec detection automatique d'adresse IP et multi-clients concurrents via fork().
+
+Etape 1 : Sur Machine 1 (Serveur)
+    Trouver l'adresse IP de la machine (ex: 192.168.1.50) et lancer le serveur :
+    ./ex2/serveur_v1_distant 5000
+
+    (Le serveur detecte et affiche les adresses IP physiques de la machine ainsi que
+    la commande exacte a executer sur le client distant).
+
+Etape 2 : Configuration du pare-feu sur Machine 1 (si necessaire)
+    sudo ufw allow 5000/tcp
+
+Etape 3 : Sur Machine 2 (Client distant)
+    Tester la connectivite reseau :
+    ping 192.168.1.50
+
+    Lancer le client interactif vers l'IP du serveur :
+    ./ex2/client_v1_distant 192.168.1.50 5000
+
+Etape 4 : Commandes a tester dans le terminal client
+    distant> ping
+    distant> date
+    distant> info
+    distant> msg Bonjour depuis la machine distante !
+    distant> Ceci est un message libre
+    distant> help
+    distant> quit
+
+
+#####################################################################################
+###########################  EXERCICE 2 - VERSION 2  ################################
+#############  TRANSFERT MULTI-DONNEES A DISTANCE (FICHIERS / STREAMING)  ###########
+#####################################################################################
+
+Compilation :
+    make ex2_v2
+
+Objectif :
+    Transferer n'importe quelle forme de donnees (fichiers binaires de plusieurs Mo,
+    images, videos, documents PDF, archives ZIP, code source) entre deux machines
+    distinctes sans corruption, avec suivi de la progression en temps reel.
+
+Etape 1 : Preparation des donnees de test sur Machine 1 (Serveur)
+    mkdir -p ~/racine_ftp/multimedia
+    echo "Document texte de test" > ~/racine_ftp/document.txt
+    head -c 3000000 /dev/urandom > ~/racine_ftp/video.bin   # Fichier binaire lourd de 3 Mo
+
+Etape 2 : Lancement du serveur de donnees sur Machine 1
+    ./ex2/serveur_v2_transfert 5000 ~/racine_ftp
+
+    (Le serveur affiche ses IP et se met en attente de connexions distantes).
+
+Etape 3 : Preparation d'une donnee locale sur Machine 2 (Client)
+    # Generer une image / fichier binaire local a envoyer au serveur :
+    head -c 1048576 /dev/urandom > photo_client.png       # Donnee binaire de 1 Mo
+
+Etape 4 : Connexion et transfert interactif depuis Machine 2
+    ./ex2/client_v2_transfert 192.168.1.50 5000
+
+    transfert> ls                                       # Voir les fichiers du serveur
+    transfert> pwd                                      # Voir le dossier virtuel
+    transfert> put photo_client.png                     # Televerser du client vers le serveur (Upload)
+    transfert> get video.bin                            # Telecharger du serveur vers le client (Download)
+    transfert> cd multimedia                            # Naviguer dans les dossiers
+    transfert> cd ..                                    # Revenir a la racine
+    transfert> cd ..                                    # REFUSE (securite anti-evasion / sandbox)
+    transfert> quit
+
+Etape 5 : Verification de l'integrite binaire (0% de corruption)
+    Sur Machine 1 : sha256sum ~/racine_ftp/video.bin
+    Sur Machine 2 : sha256sum video.bin
+    --> Les empreintes SHA-256 doivent etre 100% identiques !
+"@
+Add-Content -Path "..\pipeline.txt" -Value $content -Encoding UTF8
+`
+
+Pour répondre précisément à votre demande, nous avons développé et intégré **deux versions distinctes et complémentaires de l'Exercice 2** au sein du projet, toutes deux compilées et testées avec succès.
+
+---
+
+### Vue d'ensemble des deux versions créées
+
+| Version | Nom des exécutables | Fichiers sources | Rôle & Type de communication |
+| :--- | :--- | :--- | :--- |
+| **Version 1** | `serveur_v1_distant`<br>`client_v1_distant` | [serveur_v1_distant.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2/serveur_v1_distant.c)<br>[client_v1_distant.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2/client_v1_distant.c) | **Communication distante (Messages & Contrôle)** : Échange interactif de messages et requêtes système (ping, date, info système) entre deux machines distinctes. |
+| **Version 2** | `serveur_v2_transfert`<br>`client_v2_transfert` | [serveur_v2_transfert.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2/serveur_v2_transfert.c)<br>[client_v2_transfert.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2/client_v2_transfert.c)<br>[ftp_common.h](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2/ftp_common.h) | **Transfert Multi-Données à distance** : Envoi et réception de **tout type de données** (fichiers binaires, images, vidéos, documents, textes) avec streaming par blocs de 4 Ko, barre de progression visuelle en direct et confinement sécurisé (*sandbox*). |
+
+---
+
+# 🌐 VERSION 1 : Communication à distance (Messages & Commandes)
+
+### 1. Objectif technique
+Cette version établit un canal de communication TCP pur entre deux machines distantes connectées au même réseau (LAN ou Wi-Fi).
+- **Le Serveur** écoute sur toutes les interfaces réseau (`INADDR_ANY`), inspecte la machine avec `getifaddrs()` et affiche ses adresses IP physiques pour vous indiquer immédiatement quelle commande taper sur le client.
+- **La Concurrence** : Le serveur utilise `fork()` pour traiter plusieurs machines clientes distantes simultanément sans blocage.
+- **Le Client** résout l'adresse IP (`gethostbyname`), s'y connecte et fournit un shell `distant> ` pour envoyer des messages ou interroger le serveur.
+
+---
+
+### 2. Guide pas à pas avec toutes les commandes (Version 1)
+
+#### 🔹 Étape 1 : Compilation du projet
+Dans le terminal (sur les deux machines ou la machine de test) :
+```bash
+make ex2_v1
+```
+
+#### 🔹 Étape 2 : Préparation de la Machine 1 (Hôte Serveur)
+1. Ouvrez un terminal sur la **Machine 1** et vérifiez son adresse IP locale :
+   ```bash
+   hostname -I
+   # ou :
+   ip -4 addr show
+   ```
+   *(Supposons que l'adresse IP affichée soit `192.168.1.50`)*.
+2. Si un pare-feu est actif (ex: Ubuntu), autorisez le port d'écoute :
+   ```bash
+   sudo ufw allow 5000/tcp
+   ```
+
+#### 🔹 Étape 3 : Lancement du serveur sur la Machine 1
+```bash
+./ex2/serveur_v1_distant 5000
+```
+Le serveur démarre et vous affiche automatiquement :
+```text
+=================================================================
+ [VERSION 1] SERVEUR DE COMMUNICATION À DISTANCE ACTIF
+ Adresse(s) IP pour connecter la Machine 2 (Client distant) :
+-----------------------------------------------------------------
+  -> Interface eth0     : 192.168.1.50
+     Commande sur Machine 2 : ./ex2/client_v1_distant 192.168.1.50 5000
+=================================================================
+En attente de connexion d'une machine cliente...
+```
+
+#### 🔹 Étape 4 : Connexion depuis la Machine 2 (Client distant)
+Sur la **Machine 2** (qui est sur le même réseau Wi-Fi ou filaire) :
+1. Testez la joignabilité réseau avec `ping` :
+   ```bash
+   ping 192.168.1.50
+   ```
+2. Lancez le client distant :
+   ```bash
+   ./ex2/client_v1_distant 192.168.1.50 5000
+   ```
+
+#### 🔹 Étape 5 : Dialogue interactif et commandes à tester
+Une invite `distant> ` s'affiche. Tapez ces commandes :
+
+| Commande tapée sur le client | Effet sur le réseau et réponse du serveur |
+| :--- | :--- |
+| `ping` | Répond `PONG (Serveur distant joignable à 100%)` pour valider la réactivité. |
+| `date` | Renvoie la date et l'heure système courante de la machine distante. |
+| `info` | Renvoie les caractéristiques de l'OS de la Machine 1 (`sysname`, `hostname`, `kernel`). |
+| `msg Salut serveur !` | Enregistre le message côté serveur et retourne un accusé de réception horodaté. |
+| `Tout autre texte libre` | Renvoie un écho avec le nombre d'octets reçus. |
+| `help` | Affiche le menu des commandes. |
+| `quit` | Clôture proprement la session TCP. |
+
+---
+
+# 📦 VERSION 2 : Transfert Multi-Données à distance (Fichiers, Vidéos, Binaires)
+
+### 1. Pourquoi transférer des données est différent d'un simple message ?
+- **Nature du flux TCP (Byte Stream)** : TCP ne préserve pas les limites des messages. Si vous envoyez une image de 5 Mo d'un coup, `send()` peut n'en envoyer qu'une partie, ou le récepteur peut recevoir des fragments éparpillés.
+- **Solution implémentée** : 
+  1. **En-tête de protocole** : le client ou serveur annonce d'abord le nom du fichier et sa taille exacte en octets : `PUT_REQUEST <nom> <taille>\n` ou `GET_REQUEST <nom>\n`.
+  2. **Streaming par blocs (`CHUNK = 4096 octets`)** via [ftp_common.h](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2/ftp_common.h).
+  3. **Suivi visuel en temps réel** : une barre de progression interactive s'affiche en direct pendant le transfert des gros fichiers.
+  4. **Sécurité Chroot / Sandbox** : un client distant ne peut pas inspecter tout le disque dur de la Machine 1 ; il est confiné dans un dossier racine (`~/racine_ftp`) et les chemins tentant une évasion (ex: `../../etc/passwd`) sont systématiquement rejetés.
+
+---
+
+### 2. Guide pas à pas avec toutes les commandes (Version 2)
+
+#### 🔹 Étape 1 : Compilation
+```bash
+make ex2_v2
+```
+
+#### 🔹 Étape 2 : Préparation des données sur la Machine 1 (Serveur)
+Créons un dossier partagé avec différents types de données (fichiers texte, sous-dossiers et fichier binaire lourd de 3 Mo) :
+```bash
+mkdir -p ~/racine_ftp/multimedia
+echo "Contenu d'un document important" > ~/racine_ftp/rapport.txt
+# Création d'un gros fichier binaire aléatoire de 3 Mo (simulant une vidéo ou un fichier lourd) :
+head -c 3000000 /dev/urandom > ~/racine_ftp/video.bin
+```
+
+#### 🔹 Étape 3 : Lancement du serveur sur la Machine 1
+```bash
+./ex2/serveur_v2_transfert 5000 ~/racine_ftp
+```
+Le serveur affiche ses IP et attend les requêtes de données :
+```text
+=================================================================
+ [VERSION 2] SERVEUR DE TRANSFERT MULTI-DONNÉES DISTANT ACTIF
+ Dossier racine partagé : /home/etudiant/racine_ftp
+ Adresse(s) IP pour connecter la Machine 2 (Client distant) :
+-----------------------------------------------------------------
+  -> Interface eth0     : 192.168.1.50
+     Commande sur Machine 2 : ./ex2/client_v2_transfert 192.168.1.50 5000
+=================================================================
+```
+
+#### 🔹 Étape 4 : Préparation d'une donnée locale sur la Machine 2 (Client)
+Sur la **Machine 2**, créons un fichier binaire de 1 Mo (par exemple une image ou archive) à téléverser vers le serveur :
+```bash
+head -c 1048576 /dev/urandom > photo_client.png
+```
+
+#### 🔹 Étape 5 : Lancement du client de transfert sur la Machine 2
+Connectez-vous au serveur :
+```bash
+./ex2/client_v2_transfert 192.168.1.50 5000
+```
+Le terminal affiche l'invite `transfert> `.
+
+#### 🔹 Étape 6 : Commandes de transfert à exécuter
+
+```text
+transfert> ls
+```
+> **Résultat :** Affiche la liste des données sur la Machine 1 avec distinction des types et tailles réelles :
+> ```text
+>   [DOSSIER] multimedia/
+>   [FICHIER] rapport.txt               (32 octets)
+>   [FICHIER] video.bin                 (2.86 Mo)
+> ```
+
+```text
+transfert> put photo_client.png
+```
+> **Résultat :** Téléverse la donnée binaire de la Machine 2 vers la Machine 1. Vous voyez la barre de progression défiler :
+> ```text
+>   Téléversement [==============================] 100% (1.00 / 1.00 Mo)
+>   Données bien enregistrées sur le serveur : 'photo_client.png' (1048576 octets)
+> ```
+
+```text
+transfert> get video.bin
+```
+> **Résultat :** Télécharge la vidéo de 3 Mo de la Machine 1 vers la Machine 2 :
+> ```text
+>   Téléchargement [==============================] 100% (2.86 / 2.86 Mo)
+>   [Succès] Fichier 'video.bin' reçu et enregistré avec succès !
+> ```
+
+```text
+transfert> cd multimedia
+transfert> pwd
+transfert> cd ..
+transfert> cd ..
+```
+> **Résultat :** Le deuxième `cd ..` est immédiatement **refusé** par la sécurité du serveur (`Accès refusé : tentative de sortie de la racine`), garantissant que la machine cliente ne peut pas pirater les fichiers hors du dossier partagé.
+
+```text
+transfert> quit
+```
+
+#### 🔹 Étape 7 : Preuve mathématique d'intégrité (Vérification Checksum SHA-256)
+Pour prouver au professeur ou lors de votre évaluation que le fichier binaire transféré n'a subi **aucune corruption ni perte d'octet** :
+- Sur la **Machine 1** :
+  ```bash
+  sha256sum ~/racine_ftp/video.bin
+  ```
+- Sur la **Machine 2** :
+  ```bash
+  sha256sum video.bin
+  ```
+Les deux empreintes hexadécimales de 64 caractères sont **strictement identiques**.
+
+---
+
+### 3. Exécution directe en une ligne (Mode Batch / Script)
+Le client de la Version 2 peut également être automatisé dans des scripts sans passer par le menu interactif :
+```bash
+# Téléverser directement un fichier :
+./ex2/client_v2_transfert 192.168.1.50 5000 put photo_client.png
+
+# Télécharger directement une vidéo :
+./ex2/client_v2_transfert 192.168.1.50 5000 get video.bin
+
+# Lister le dossier distant :
+./ex2/client_v2_transfert 192.168.1.50 5000 ls
+```
+
+---
+
+### Résumé des cibles du [Makefile](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/Makefile)
+Toutes les règles de compilation sont à jour :
+- `make ex2_v1` : compile uniquement la Version 1 (Messages distants).
+- `make ex2_v2` : compile uniquement la Version 2 (Transfert multi-données).
+- `make all` : compile tout le TP (Exercice 1 et toutes les versions de l'Exercice 2).
+- `make clean` : supprime proprement tous les binaires générés.
+
+Le fichier de suivi [pipeline.txt](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/pipeline.txt) a également été mis à jour avec ces instructions complètes.
+
+
+
+
+
+
+#############################################
+#############################################
+Created serveur_v1.c
+Created client_v1.c
+Created ftp_common.h
+Created serveur_v2.c
+Created client_v2.c
+Created Makefile
+Ran command: `wsl bash -c 'cd ex2_versions && make clean && make all'`
+Used tool: manage_task
+Edited serveur_v1.c
+Edited serveur_v2.c
+Ran command: `wsl bash -c 'cd ex2_versions && make clean && make all'`
+Used tool: manage_task
+Created commandes.txt
+Viewed Makefile:1-37
+Edited Makefile
+Ran command: `wsl -e make versions`
+Used tool: manage_task
+
+Les deux versions ont été isolées dans un **dossier unique et autonome** : [ex2_versions/](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2_versions).
+
+Le code a été allégé pour ne garder que **l'essentiel**, avec des **commentaires courts et précis** (1 ligne par étape et par fonction, sans surcharge).
+
+---
+
+### 📂 Contenu du dossier `ex2_versions/`
+
+```text
+ex2_versions/
+├── Makefile          # Compilation directe (make v1, make v2, make all)
+├── ftp_common.h      # Primitives de streaming TCP (send_all, recv_all, stream)
+├── serveur_v1.c      # V1 : Serveur distant (Messages & Commandes)
+├── client_v1.c       # V1 : Client distant
+├── serveur_v2.c      # V2 : Serveur multi-données (Fichiers binaires, vidéos, images)
+├── client_v2.c       # V2 : Client multi-données
+└── commandes.txt     # Fiche récapitulative rapide de toutes les commandes
+```
+
+---
+
+### 🔍 Structure du code et commentaires courts
+
+#### 1. Version 1 : Messages & Contrôle à distance
+- [serveur_v1.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2_versions/serveur_v1.c) :
+  - `// Fonction : Affiche les IP réseau réelles`
+  - `// Étape 1 : Création de la socket TCP`
+  - `// Étape 2 : Réutilisation du port (évite blocage TIME_WAIT)`
+  - `// Étape 3 : Attachement (bind) sur toutes les interfaces réseau`
+  - `// Étape 4 : Mise en écoute`
+  - `// Étape 5 : Boucle d'acceptation et fork pour concurrence`
+  - `// Fonction : Gère le dialogue avec un client distant (ping, date, écho, quit)`
+- [client_v1.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2_versions/client_v1.c) :
+  - `// Étape 1 : Résolution du nom d'hôte ou IP`
+  - `// Étape 2 : Création de la socket TCP`
+  - `// Étape 3 : Configuration de l'adresse du serveur`
+  - `// Étape 4 : Connexion au serveur distant`
+  - `// Étape 5 : Boucle interactive d'envoi et de réception`
+  - `// Étape 6 : Fermeture propre de la socket`
+
+#### 2. Version 2 : Transfert Multi-Données (Images, Vidéos, Binaires, Textes)
+- [ftp_common.h](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2_versions/ftp_common.h) :
+  - `// Fonction : Envoie exactement n octets en bouclant sur send()`
+  - `// Fonction : Reçoit exactement n octets en bouclant sur recv()`
+  - `// Fonction : Lit une ligne terminée par '\n' (en-têtes)`
+  - `// Fonction : Transfère 'size' octets de la socket vers un fichier`
+  - `// Fonction : Transfère 'size' octets d'un fichier vers la socket`
+- [serveur_v2.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2_versions/serveur_v2.c) :
+  - `// Fonction : Empêche de sortir de la racine (sécurité sandbox)`
+  - `// Fonction : Téléchargement vers le client (GET) - Mode binaire`
+  - `// Fonction : Téléversement depuis le client (PUT) - Mode binaire`
+  - `// Fonction : Liste les fichiers du dossier courant (LS)`
+  - `// Fonction : Change de répertoire (CD) avec vérification de confinement`
+  - `// Fonction : Session de transfert avec un client distant (processus fils)`
+- [client_v2.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Applications%20R%C3%A9parties/TPs/TP%201%20-%20Socket%20C/tp1_socket_c/ex2_versions/client_v2.c) :
+  - `// Fonction : Télécharge un fichier depuis le serveur (GET)`
+  - `// Fonction : Téléverse un fichier vers le serveur (PUT)`
+  - `// Fonction : Demande la liste des fichiers au serveur (LS)`
+  - `// Fonction : Change de répertoire distant (CD) ou affiche le chemin (PWD)`
+  - `// Étape 1 à 4 : Résolution, socket, connexion et shell v2>`
+
+---
+
+### 🚀 Guide des commandes d'exécution
+
+#### 🔹 1. Compilation
+Depuis le dossier `ex2_versions` :
+```bash
+cd ex2_versions
+make
+```
+
+---
+
+#### 🔹 2. Tester la Version 1 (Messages & Contrôle)
+- **Sur Machine 1 (Serveur) :**
+  ```bash
+  ./serveur_v1 5000
+  ```
+- **Sur Machine 2 (Client distant) :**
+  ```bash
+  ./client_v1 192.168.1.50 5000
+  ```
+- **Commandes à tester dans `v1>` :**
+  ```text
+  v1> ping                 # Répond PONG
+  v1> date                 # Affiche la date/heure du serveur
+  v1> Bonjour machine 1    # Message libre (reçoit accusé)
+  v1> quit                 # Déconnexion
+  ```
+
+---
+
+#### 🔹 3. Tester la Version 2 (Fichiers, Vidéos, Binaires)
+- **Sur Machine 1 (Serveur) :**
+  ```bash
+  # Création d'un sous-dossier et d'un fichier binaire lourd de 3 Mo
+  mkdir -p racine_ftp/docs
+  echo "Texte secret" > racine_ftp/note.txt
+  head -c 3000000 /dev/urandom > racine_ftp/video.bin
+
+  # Lancement du serveur de données
+  ./serveur_v2 5000 ./racine_ftp
+  ```
+
+- **Sur Machine 2 (Client distant) :**
+  ```bash
+  # Création d'une image/fichier binaire local de 1 Mo à envoyer
+  head -c 1048576 /dev/urandom > photo.png
+
+  # Connexion au serveur
+  ./client_v2 192.168.1.50 5000
+  ```
+
+- **Commandes à tester dans `v2>` :**
+  ```text
+  v2> ls                   # Affiche les fichiers et leur taille exacte
+  v2> pwd                  # Affiche le dossier distant
+  v2> put photo.png        # Envoie le fichier local au serveur
+  v2> get video.bin        # Télécharge la vidéo de 3 Mo sans corruption
+  v2> cd docs              # Entre dans docs
+  v2> cd ..                # Revient à la racine
+  v2> cd ..                # REFUSÉ (sécurité sandbox)
+  v2> quit                 # Déconnexion
+  ```
+
+- **Vérification d'intégrité (0% de perte ou corruption) :**
+  ```bash
+  # Sur Machine 1 :
+  sha256sum racine_ftp/video.bin
+  # Sur Machine 2 :
+  sha256sum video.bin
+  # -> Les deux empreintes SHA-256 sont 100% identiques !
+  ```

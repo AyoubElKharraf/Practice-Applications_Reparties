@@ -1,0 +1,272 @@
+
+#####################################################################################
+###############################  EXERCICE 1  ########################################
+#####################################################################################
+
+```bash
+cd ~/TP1
+make ex1
+```
+
+## Étape 1 : serveur et client simples (2 terminaux)
+
+| Ordre | Terminal | Commande |
+|---|---|---|
+| 1 | Terminal 1 | `./ex1/serveur_simple` |
+| 2 | Terminal 2 | `./ex1/client_simple` |
+
+## Étape 2 : serveur écho (2 terminaux)
+
+| Ordre | Terminal | Commande |
+|---|---|---|
+| 1 | Terminal 1 | `./ex1/serveur_echo` |
+| 2 | Terminal 2 | `./ex1/client_echo` |
+| 3 | Terminal 2 | Tape `bonjour`, tu reçois `BONJOUR` |
+| 4 | Terminal 2 | Tape `quit` pour terminer le client |
+| 5 | Terminal 1 | `Ctrl+C` pour arrêter le serveur |
+
+## Étape 3 : serveur multi-clients (3 terminaux)
+
+| Ordre | Terminal | Commande |
+|---|---|---|
+| 1 | Terminal 1 | `./ex1/serveur_echo_multi` |
+| 2 | Terminal 2 | `./ex1/client_echo` |
+| 3 | Terminal 3 | `./ex1/client_echo` |
+| 4 | Terminal 2 et 3 | Écris des phrases dans **les deux** en alternant |
+| 5 | Terminal 2 et 3 | `quit` dans chacun |
+| 6 | Terminal 1 | `Ctrl+C` |
+
+## Étape 4 : communication à distance entre deux machines distinctes
+
+> **Machine 1 (Serveur) :** Trouver son adresse IP avec `hostname -I` ou `ip a` (ex: `192.168.1.50`).
+> **Machine 2 (Client) :** Doit être sur le même réseau local (LAN/Wi-Fi) ou joignable par IP.
+
+### Variante A : échange simple
+| Machine | Terminal | Commande |
+|---|---|---|
+| Machine 1 (Serveur) | Terminal 1 | `./ex1/serveur_distant 6000` |
+| Machine 2 (Client)  | Terminal 2 | `./ex1/client_distant 192.168.1.50 6000 "Salut serveur distant !"` |
+
+### Variante B : dialogue continu (écho majuscule multi-clients)
+| Machine | Terminal | Commande |
+|---|---|---|
+| Machine 1 (Serveur) | Terminal 1 | `./ex1/serveur_echo_distant 6000` |
+| Machine 2 (Client)  | Terminal 2 | `./ex1/client_echo_distant 192.168.1.50 6000` |
+| Machine 2 (Client)  | Terminal 2 | Tape des phrases, reçois en MAJUSCULE, tape `quit` pour sortir |
+| Machine 3 (Client)  | Terminal 3 | `./ex1/client_echo_distant 192.168.1.50 6000` (test multi-machines simultanées) |
+
+
+---
+
+# C. Commandes de dépannage
+
+```bash
+ss -tlnp | grep 6000      # le serveur écoute-t-il sur le port 6000 ?
+pkill serveur_            # tue un serveur resté actif (corrige "Address already in use")
+echo "salut" | nc localhost 6000    # teste le serveur avec netcat, sans ton client
+```
+
+---
+
+# D. Pipeline complet en un coup d'œil
+
+1. `make ex1`
+2. T1 : `serveur_simple` → T2 : `client_simple` → vérifier "Message bien reçu"
+3. T1 : `serveur_echo` → T2 : `client_echo` → `bonjour` → `BONJOUR` → `quit`
+4. T1 : `serveur_echo_multi` → T2 et T3 : `client_echo` → dialogue simultané
+5. `Ctrl+C` sur le serveur à la fin de chaque étape
+
+
+
+#####################################################################################
+###############################  EXERCICE 1.1  #######################################
+#####################################################################################
+
+
+A. Échange simple (Requête / Réponse)
+    serveur_distant.c :
+        Détecte et affiche automatiquement les adresses IP physiques de la machine au démarrage.
+        Écoute sur INADDR_ANY avec port configurable : ./serveur_distant [port].
+        Affiche l'adresse IP et le port du client distant dès qu'il se connecte.
+    client_distant.c :
+        Prend en arguments l'IP distante, le port et un message optionnel :
+        ./client_distant <ip_serveur> [port] [message]
+        Résout l'hôte via gethostbyname(), se connecte, transmet les données et affiche la réponse.
+B. Dialogue continu & Multi-clients (Écho en majuscules)
+    serveur_echo_distant.c :
+        Multi-clients concurrents grâce à fork().
+        Gère plusieurs machines clientes distantes en simultané.
+        Renvoie chaque phrase en majuscules et quitte proprement sur réception de "quit".
+    client_echo_distant.c :
+        Dialogue interactif avec le serveur distant (> phrase).
+
+2. Compilation
+
+Le Makefile a été mis à jour :
+
+    bash
+    cd "TP 1 - Socket C/tp1_socket_c"
+    make ex1
+
+3. Guide pas à pas pour tester entre 2 machines distantes
+    Étape 1 : Obtenir l'adresse IP de la Machine 1 (Serveur)
+
+        Sur la machine qui hébergera le serveur, ouvrez un terminal et tapez :
+
+        bash
+        # Sur Linux / WSL :
+        hostname -I
+        # ou bien :
+        ip -4 addr show
+
+        (Exemple d'IP trouvée : 192.168.1.50)
+
+        NOTE
+            Si le serveur tourne sous Linux / Ubuntu avec pare-feu actif, autorisez le port : sudo ufw allow 6000/tcp
+
+Étape 2 : Lancer le serveur sur la Machine 1
+    bash
+    ./ex1/serveur_distant 6000
+
+    Le serveur affiche directement les adresses IP disponibles et reste en attente.
+
+Étape 3 : Lancer le client sur la Machine 2
+
+    Sur la deuxième machine (qui doit être sur le même réseau local / Wi-Fi) :
+
+    bash
+        # Test de connectivité préalable :
+            ping 192.168.1.50
+        # Lancement du client vers l'IP du serveur :
+            ./ex1/client_distant 192.168.1.50 6000 "Bonjour depuis la deuxieme machine !"
+            Étape 4 : Tester la version Écho Multi-clients
+            Sur la Machine 1 (Serveur) :
+            bash
+            ./ex1/serveur_echo_distant 6000
+            Sur la Machine 2 (Client distant A) :
+            bash
+            ./ex1/client_echo_distant 192.168.1.50 6000
+            Sur une Machine 3 (Client distant B) :
+            bash
+            ./ex1/client_echo_distant 192.168.1.50 6000
+
+
+    Les deux clients peuvent dialoguer en parallèle avec le serveur distant. Tapez quit pour vous déconnecter.
+#####################################################################################
+###############################  EXERCICE 2  ########################################
+#####################################################################################
+
+Préparation des tests
+
+mkdir -p ~/racine_ftp/docs
+echo "contenu de toto" > ~/racine_ftp/toto.txt
+echo "dans docs" > ~/racine_ftp/docs/note.txt
+
+head -c 3000000 /dev/urandom > ~/racine_ftp/video.bin    # fichier binaire de 3 Mo
+head -c 500000  /dev/urandom > /tmp/upload.bin           # fichier binaire à envoyer
+
+./serveur_ftp 4098 ~/racine_ftp                          # terminal 1
+
+./client_ftp localhost 4098                              # terminal 2
+
+TEST FINAL :
+
+# Terminal 1
+./ex2/serveur_ftp 4098 ~/racine_ftp
+# Terminal 2
+./ex2/client_ftp localhost 4098
+
+ftp> pwd
+ftp> ls
+ftp> cd docs
+ftp> pwd
+ftp> cd ..
+ftp> cd ..          # doit être REFUSÉ
+ftp> get video.bin
+ftp> put /tmp/upload.bin
+ftp> get ../etc/passwd    # doit être REFUSÉ (nom invalide)
+ftp> quit
+
+#####################################################################################
+###########################  EXERCICE 2 - VERSION 1  ################################
+################  COMMUNICATION A DISTANCE (MESSAGES & CONTROLE)  ###################
+#####################################################################################
+
+Compilation :
+    make ex2_v1
+
+Objectif :
+    Permettre a deux machines distinctes (Machine 1 = Serveur, Machine 2 = Client)
+    de communiquer a distance : envoi de messages textes, commandes systeme (ping, date, info),
+    avec detection automatique d'adresse IP et multi-clients concurrents via fork().
+
+Etape 1 : Sur Machine 1 (Serveur)
+    Trouver l'adresse IP de la machine (ex: 192.168.1.50) et lancer le serveur :
+    ./ex2/serveur_v1_distant 5000
+
+    (Le serveur detecte et affiche les adresses IP physiques de la machine ainsi que
+    la commande exacte a executer sur le client distant).
+
+Etape 2 : Configuration du pare-feu sur Machine 1 (si necessaire)
+    sudo ufw allow 5000/tcp
+
+Etape 3 : Sur Machine 2 (Client distant)
+    Tester la connectivite reseau :
+    ping 192.168.1.50
+
+    Lancer le client interactif vers l'IP du serveur :
+    ./ex2/client_v1_distant 192.168.1.50 5000
+
+Etape 4 : Commandes a tester dans le terminal client
+    distant> ping
+    distant> date
+    distant> info
+    distant> msg Bonjour depuis la machine distante !
+    distant> Ceci est un message libre
+    distant> help
+    distant> quit
+
+
+#####################################################################################
+###########################  EXERCICE 2 - VERSION 2  ################################
+#############  TRANSFERT MULTI-DONNEES A DISTANCE (FICHIERS / STREAMING)  ###########
+#####################################################################################
+
+Compilation :
+    make ex2_v2
+
+Objectif :
+    Transferer n'importe quelle forme de donnees (fichiers binaires de plusieurs Mo,
+    images, videos, documents PDF, archives ZIP, code source) entre deux machines
+    distinctes sans corruption, avec suivi de la progression en temps reel.
+
+Etape 1 : Preparation des donnees de test sur Machine 1 (Serveur)
+    mkdir -p ~/racine_ftp/multimedia
+    echo "Document texte de test" > ~/racine_ftp/document.txt
+    head -c 3000000 /dev/urandom > ~/racine_ftp/video.bin   # Fichier binaire lourd de 3 Mo
+
+Etape 2 : Lancement du serveur de donnees sur Machine 1
+    ./ex2/serveur_v2_transfert 5000 ~/racine_ftp
+
+    (Le serveur affiche ses IP et se met en attente de connexions distantes).
+
+Etape 3 : Preparation d'une donnee locale sur Machine 2 (Client)
+    # Generer une image / fichier binaire local a envoyer au serveur :
+    head -c 1048576 /dev/urandom > photo_client.png       # Donnee binaire de 1 Mo
+
+Etape 4 : Connexion et transfert interactif depuis Machine 2
+    ./ex2/client_v2_transfert 192.168.1.50 5000
+
+    transfert> ls                                       # Voir les fichiers du serveur
+    transfert> pwd                                      # Voir le dossier virtuel
+    transfert> put photo_client.png                     # Televerser du client vers le serveur (Upload)
+    transfert> get video.bin                            # Telecharger du serveur vers le client (Download)
+    transfert> cd multimedia                            # Naviguer dans les dossiers
+    transfert> cd ..                                    # Revenir a la racine
+    transfert> cd ..                                    # REFUSE (securite anti-evasion / sandbox)
+    transfert> quit
+
+Etape 5 : Verification de l'integrite binaire (0% de corruption)
+    Sur Machine 1 : sha256sum ~/racine_ftp/video.bin
+    Sur Machine 2 : sha256sum video.bin
+    --> Les empreintes SHA-256 doivent etre 100% identiques !
