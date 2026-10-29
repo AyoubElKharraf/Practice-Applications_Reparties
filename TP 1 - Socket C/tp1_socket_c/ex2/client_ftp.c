@@ -15,6 +15,7 @@
 #define MAX_TEXT (16 * 1024 * 1024)
 
 /* lit l'en-tête de réponse : "<tag> OK|ERR <len>" */
+/* Lit la réponse du protocole FTP et extrait son état ainsi que la taille éventuelle des données. */
 static int read_reply(int fd, int *ok, long long *len) {
     char line[LINE_MAX_LEN], tag[64], st[8];
     if (recv_line(fd, line, sizeof line) < 0) return -1;
@@ -24,6 +25,7 @@ static int read_reply(int fd, int *ok, long long *len) {
 }
 
 /* lit <len> octets de texte et les affiche (préfixe "Erreur : " si erreur) */
+/* Reçoit le contenu annoncé par le serveur et l'affiche comme texte. */
 static int print_payload(int fd, int ok, long long len) {
     if (len > MAX_TEXT) return -1;
     char *buf = malloc((size_t)len + 1);
@@ -38,6 +40,7 @@ static int print_payload(int fd, int ok, long long len) {
 }
 
 /* commandes "texte" : ls, pwd, cd */
+/* Envoie une commande textuelle au serveur et affiche sa réponse. */
 static int cmd_text(int fd, const char *request, const char *arg) {
     char line[LINE_MAX_LEN];
     int ok; long long len;
@@ -46,6 +49,7 @@ static int cmd_text(int fd, const char *request, const char *arg) {
     if (read_reply(fd, &ok, &len) < 0) return -1;
     return print_payload(fd, ok, len);
 }
+/* Demande un fichier au serveur, puis reçoit et enregistre son contenu local. */
 
 static int cmd_get(int fd, const char *name) {
     char line[LINE_MAX_LEN];
@@ -67,6 +71,7 @@ static int cmd_get(int fd, const char *name) {
     else if (f) printf("Erreur d'ecriture locale\n");
     return 0;
 }
+/* Envoie un fichier local au serveur après avoir annoncé son nom et sa taille. */
 
 static int cmd_put(int fd, const char *name) {
     char line[LINE_MAX_LEN], copy[PATH_MAX];
@@ -86,6 +91,7 @@ static int cmd_put(int fd, const char *name) {
     if (read_reply(fd, &ok, &len) < 0) return -1;
     return print_payload(fd, ok, len);
 }
+/* Crée une socket client et établit la connexion TCP vers la machine et le port donnés. */
 
 static int connecter(const char *machine, int port) {
     struct hostent *host = gethostbyname(machine);
@@ -100,6 +106,7 @@ static int connecter(const char *machine, int port) {
     if (connect(s, (struct sockaddr *)&addr, sizeof addr) == -1) { perror("connect"); close(s); return -1; }
     return s;
 }
+/* Point d'entrée : analyse les arguments, se connecte au serveur FTP et exécute les commandes demandées. */
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {

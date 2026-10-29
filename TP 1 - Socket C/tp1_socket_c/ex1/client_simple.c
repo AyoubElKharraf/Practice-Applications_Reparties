@@ -10,6 +10,7 @@
 
 #define PORT 6000
 #define TAILLEBUF 256
+/* Point d'entrée : se connecte au serveur local, envoie le message fixe et affiche la réponse. */
 
 int main(int argc, char *argv[]) {
     const char *machine = (argc > 1) ? argv[1] : "localhost";

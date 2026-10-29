@@ -18,6 +18,7 @@
 #define TAILLEBUF 1024
 
 /* Affiche les adresses IP réelles de la machine pour guider l'utilisateur */
+/* Affiche les adresses IPv4 utilisables pour joindre le serveur depuis une autre machine. */
 static void afficher_adresses_ip(int port) {
     struct ifaddrs *ifaddr, *ifa;
     printf("=================================================================\n");
@@ -46,6 +47,7 @@ static void afficher_adresses_ip(int port) {
 }
 
 /* Traitement d'un client distant dans son propre processus fils */
+/* Gère une session d'écho avec un client distant et affiche son adresse. */
 static void traiter_client(int s_service, struct sockaddr_in addr_client) {
     char buf[TAILLEBUF];
     int nb;
@@ -93,6 +95,7 @@ static void traiter_client(int s_service, struct sockaddr_in addr_client) {
     printf("[Processus %d] Session terminée.\n", getpid());
     fflush(stdout);
 }
+/* Point d'entrée : ouvre le serveur sur toutes les interfaces et distribue chaque connexion à un traitement client. */
 
 int main(int argc, char *argv[]) {
     int port = (argc > 1) ? atoi(argv[1]) : PORT_DEFAUT;

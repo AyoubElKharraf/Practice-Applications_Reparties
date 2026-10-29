@@ -18,6 +18,7 @@
 #define PORT_DEFAUT 5000
 
 // Fonction : Télécharge un fichier depuis le serveur (GET)
+/* Demande un fichier distant et le télécharge en blocs dans un fichier local. */
 static void cmd_get(int sock, const char *nom) {
     char req[256], line[256];
     snprintf(req, sizeof(req), "GET_REQUEST %s\n", nom);
@@ -44,6 +45,7 @@ static void cmd_get(int sock, const char *nom) {
 }
 
 // Fonction : Téléverse un fichier vers le serveur (PUT)
+/* Envoie un fichier local au serveur en indiquant sa taille et son nom. */
 static void cmd_put(int sock, const char *chemin) {
     struct stat st;
     if (stat(chemin, &st) < 0 || !S_ISREG(st.st_mode)) {
@@ -73,6 +75,7 @@ static void cmd_put(int sock, const char *chemin) {
 }
 
 // Fonction : Demande la liste des fichiers au serveur (LS)
+/* Demande la liste des fichiers du répertoire distant et l'affiche. */
 static void cmd_ls(int sock) {
     char req[] = "LS_REQUEST\n", line[256];
     send_all(sock, req, strlen(req));
@@ -83,6 +86,7 @@ static void cmd_ls(int sock) {
 }
 
 // Fonction : Change de répertoire distant (CD) ou affiche le chemin (PWD)
+/* Envoie une commande textuelle (par exemple pwd ou cd) et affiche la réponse. */
 static void cmd_texte(int sock, const char *req_str) {
     char req[256], rep[256];
     snprintf(req, sizeof(req), "%s\n", req_str);
@@ -90,6 +94,7 @@ static void cmd_texte(int sock, const char *req_str) {
     recv_line(sock, rep, sizeof(rep));
     printf("  %s\n", rep);
 }
+/* Point d'entrée du client V2 : se connecte au serveur puis interprète les commandes saisies. */
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {

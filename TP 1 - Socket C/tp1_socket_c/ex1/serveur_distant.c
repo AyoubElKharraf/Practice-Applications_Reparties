@@ -16,6 +16,7 @@
 #define TAILLEBUF 1024
 
 /* Affiche les adresses IP réelles de la machine pour faciliter la connexion du client distant */
+/* Affiche les adresses IPv4 des interfaces réseau et la commande à utiliser depuis un client distant. */
 static void afficher_adresses_ip(int port) {
     struct ifaddrs *ifaddr, *ifa;
     printf("=================================================================\n");
@@ -42,6 +43,7 @@ static void afficher_adresses_ip(int port) {
     printf("  -> En local (boucle)    : 127.0.0.1 (port %d)\n", port);
     printf("=================================================================\n\n");
 }
+/* Point d'entrée du serveur : prépare la socket TCP, accepte les clients un par un et leur renvoie un accusé de réception. */
 
 int main(int argc, char *argv[]) {
     int port = (argc > 1) ? atoi(argv[1]) : PORT_DEFAUT;

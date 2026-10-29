@@ -13,6 +13,7 @@
 
 #define PORT_DEFAUT 6000
 #define TAILLEBUF 1024
+/* Point d'entrée : résout le serveur distant, ouvre la connexion TCP et échange les messages saisis jusqu'à quit. */
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {

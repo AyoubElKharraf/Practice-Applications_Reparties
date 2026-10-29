@@ -13,6 +13,7 @@
 
 #define PORT_DEFAUT 6000
 #define TAILLEBUF 1024
+/* Point d'entrée : lit l'IP, le port et le message, puis envoie un message TCP à un serveur distant et affiche sa réponse. */
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {

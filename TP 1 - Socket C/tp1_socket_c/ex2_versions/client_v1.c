@@ -15,6 +15,7 @@
 
 #define PORT_DEFAUT 5000
 #define BUF_SIZE 1024
+/* Point d'entrée du client V1 : se connecte au serveur distant et échange des commandes en mode interactif. */
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {

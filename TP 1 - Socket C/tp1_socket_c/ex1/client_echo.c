@@ -11,6 +11,7 @@
 
 #define PORT 6000
 #define TAILLEBUF 1024
+/* Point d'entrée : se connecte au serveur d'écho et échange des phrases saisies jusqu'à quit. */
 
 int main(int argc, char *argv[]) {
     const char *machine = (argc > 1) ? argv[1] : "localhost";

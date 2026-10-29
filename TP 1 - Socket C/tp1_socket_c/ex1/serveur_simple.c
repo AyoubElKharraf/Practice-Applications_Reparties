@@ -10,6 +10,7 @@
 
 #define PORT 6000
 #define TAILLEBUF 256
+/* Point d'entrée du serveur : attend une connexion TCP, reçoit un message, répond puis ferme la session. */
 
 int main(void) {
     struct sockaddr_in addr_serveur, addr_client;

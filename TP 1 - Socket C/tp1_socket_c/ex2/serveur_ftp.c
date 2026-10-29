@@ -12,6 +12,7 @@
 static char root[PATH_MAX];     /* racine réelle gérée par le serveur */
 
 /* path est-il la racine ou un de ses sous-répertoires ? */
+/* Vérifie que le chemin résolu reste à l'intérieur du dossier partagé. */
 static int in_root(const char *path) {
     size_t rl = strlen(root);
     if (strncmp(path, root, rl) != 0) return 0;
@@ -26,19 +27,23 @@ static const char *virtual_path(const char *real) {
 }
 
 /* get/put n'acceptent qu'un nom simple : pas de '/', pas de ".." (anti-évasion) */
+/* Refuse les noms vides ou contenant des éléments de chemin interdits. */
 static int valid_filename(const char *n) {
     return n[0] != '\0' && strchr(n, '/') == NULL &&
            strcmp(n, ".") != 0 && strcmp(n, "..") != 0;
 }
+/* Envoie une réponse protocolaire indiquant un échec et son explication. */
 
 static int reply_err(int fd, const char *tag, const char *msg) {
     return send_reply(fd, tag, 0, msg, strlen(msg));
 }
+/* Envoie une réponse protocolaire de succès contenant un texte. */
 static int reply_ok_text(int fd, const char *tag, const char *msg) {
     return send_reply(fd, tag, 1, msg, strlen(msg));
 }
 
 /* ---- GET_REQUEST ---- */
+/* Ouvre un fichier du serveur et envoie son contenu au client. */
 static int handle_get(int fd, const char *name) {
     struct stat st;
     if (!valid_filename(name)) return reply_err(fd, "GET_REPLY", "Nom de fichier invalide");
@@ -56,6 +61,7 @@ static int handle_get(int fd, const char *name) {
 }
 
 /* ---- PUT_REQUEST : args = "<nom> <taille>" ---- */
+/* Reçoit le nom et les octets d'un fichier envoyé par le client, puis les enregistre. */
 static int handle_put(int fd, char *args) {
     char *sp = strrchr(args, ' ');
     char *end;
@@ -83,6 +89,7 @@ static int handle_put(int fd, char *args) {
 }
 
 /* ---- CD_REQUEST ---- */
+/* Change le répertoire courant de la session après vérification du confinement. */
 static int handle_cd(int fd, const char *arg) {
     char old[PATH_MAX], cur[PATH_MAX];
     if (arg[0] == '\0') return reply_err(fd, "CD_REPLY", "Usage : cd <repertoire>");
@@ -98,6 +105,7 @@ static int handle_cd(int fd, const char *arg) {
 }
 
 /* ---- PWD_REQUEST ---- */
+/* Renvoie au client le chemin courant dans l'espace FTP. */
 static int handle_pwd(int fd) {
     char cur[PATH_MAX];
     if (!getcwd(cur, sizeof cur)) return reply_err(fd, "PWD_REPLY", strerror(errno));
@@ -105,6 +113,7 @@ static int handle_pwd(int fd) {
 }
 
 /* ---- LS_REQUEST [repertoire] ---- */
+/* Liste les entrées du répertoire demandé et envoie le résultat au client. */
 static int handle_ls(int fd, const char *arg) {
     char target[PATH_MAX];
     struct dirent **list;
@@ -141,6 +150,7 @@ static int handle_ls(int fd, const char *arg) {
 }
 
 /* ---- dialogue avec un client ---- */
+/* Traite les commandes FTP successives d'un client jusqu'à sa déconnexion. */
 static void session(int fd) {
     char line[LINE_MAX_LEN];
     while (recv_line(fd, line, sizeof line) >= 0) {
@@ -159,6 +169,7 @@ static void session(int fd) {
     }
     close(fd);
 }
+/* Point d'entrée : configure le dossier racine, écoute en TCP et lance une session pour chaque client. */
 
 int main(int argc, char *argv[]) {
     if (argc != 3) { fprintf(stderr, "Usage : %s <port> <racine>\n", argv[0]); return 1; }

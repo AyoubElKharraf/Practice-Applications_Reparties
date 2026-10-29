@@ -15,6 +15,7 @@
 #define TAILLEBUF 1024
 
 /* dialogue avec UN client, jusqu'à "quit" ou fermeture de la connexion */
+/* Gère la conversation d'un client : reçoit ses messages, les convertit en majuscules et renvoie le résultat. */
 static void traiter_client(int s_service) {
     char buf[TAILLEBUF];
     int nb;
@@ -35,6 +36,7 @@ static void traiter_client(int s_service) {
     /* nb == 0 : le client a fermé la connexion ; nb == -1 : erreur */
     close(s_service);
 }
+/* Point d'entrée : met le serveur TCP en écoute et, selon MULTI, traite les clients en série ou dans des processus fils. */
 
 int main(void) {
     struct sockaddr_in addr_serveur, addr_client;

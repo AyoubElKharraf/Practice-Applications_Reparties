@@ -21,6 +21,7 @@
 static char root[PATH_MAX]; // Dossier racine confiné (sandbox)
 
 // Fonction : Affiche les IP réseau pour la connexion cliente distante
+/* Affiche les adresses du serveur et son dossier racine de partage. */
 static void afficher_ip(int port, const char *dossier) {
     struct ifaddrs *ifaddr, *ifa;
     printf("[SERVEUR V2] Transfert de fichiers actif sur le port %d\n", port);
@@ -41,12 +42,14 @@ static void afficher_ip(int port, const char *dossier) {
 }
 
 // Fonction : Empêche de sortir de la racine (sécurité sandbox)
+/* Vérifie qu'un chemin reste dans le dossier racine autorisé. */
 static int in_root(const char *path) {
     size_t rl = strlen(root);
     return (strncmp(path, root, rl) == 0 && (rl == 1 || path[rl] == '\0' || path[rl] == '/'));
 }
 
 // Fonction : Téléchargement vers le client (GET) - Mode binaire
+/* Envoie au client un fichier du serveur par blocs après avoir transmis sa taille. */
 static int handle_get(int fd, const char *name) {
     struct stat st;
     if (strchr(name, '/') || stat(name, &st) < 0 || !S_ISREG(st.st_mode)) {
@@ -68,6 +71,7 @@ static int handle_get(int fd, const char *name) {
 }
 
 // Fonction : Téléversement depuis le client (PUT) - Mode binaire
+/* Reçoit un fichier du client et le sauvegarde dans le dossier autorisé. */
 static int handle_put(int fd, char *args) {
     char *sp = strrchr(args, ' ');
     if (!sp) return -1;
@@ -88,6 +92,7 @@ static int handle_put(int fd, char *args) {
 }
 
 // Fonction : Liste les fichiers du dossier courant (LS)
+/* Construit et renvoie la liste des éléments du répertoire courant. */
 static int handle_ls(int fd) {
     struct dirent **list;
     int n = scandir(".", &list, NULL, alphasort);
@@ -113,6 +118,7 @@ static int handle_ls(int fd) {
 }
 
 // Fonction : Change de répertoire (CD) avec vérification de confinement
+/* Change le répertoire distant si la destination reste dans la racine autorisée. */
 static int handle_cd(int fd, const char *rep) {
     char cur[PATH_MAX], rep_msg[PATH_MAX + 64];
     if (chdir(rep) == 0 && getcwd(cur, sizeof(cur)) && in_root(cur)) {
@@ -125,6 +131,7 @@ static int handle_cd(int fd, const char *rep) {
 }
 
 // Fonction : Session de transfert avec un client distant (processus fils)
+/* Traite les commandes d'un client V2 au cours de sa session TCP. */
 static void session(int fd) {
     char line[512];
     while (recv_line(fd, line, sizeof(line)) >= 0) {
@@ -144,6 +151,7 @@ static void session(int fd) {
     }
     close(fd);
 }
+/* Point d'entrée du serveur V2 : prépare le partage, écoute et crée une session par connexion. */
 
 int main(int argc, char *argv[]) {
     int port = (argc > 1) ? atoi(argv[1]) : PORT_DEFAUT;

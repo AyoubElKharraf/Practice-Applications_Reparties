@@ -19,6 +19,7 @@
 #define BUF_SIZE 1024
 
 // Fonction : Affiche les IP réseau réelles pour guider la connexion cliente
+/* Affiche les adresses IP locales utilisables par un client distant. */
 static void afficher_ip(int port) {
     struct ifaddrs *ifaddr, *ifa;
     printf("[SERVEUR V1] En ecoute sur le port %d\n", port);
@@ -38,6 +39,7 @@ static void afficher_ip(int port) {
 }
 
 // Fonction : Gère le dialogue avec un client distant (processus fils)
+/* Gère le dialogue d'un client V1 et répond aux commandes prévues par le protocole. */
 static void traiter_client(int sock, struct sockaddr_in addr) {
     char buf[BUF_SIZE], rep[BUF_SIZE * 2];
     char ip[INET_ADDRSTRLEN];
@@ -78,6 +80,7 @@ static void traiter_client(int sock, struct sockaddr_in addr) {
     close(sock);
     printf("[%d] Session terminee avec %s:%d\n", getpid(), ip, port);
 }
+/* Point d'entrée du serveur V1 : écoute les connexions et traite chaque client, éventuellement dans un processus fils. */
 
 int main(int argc, char *argv[]) {
     int port = (argc > 1) ? atoi(argv[1]) : PORT_DEFAUT;
