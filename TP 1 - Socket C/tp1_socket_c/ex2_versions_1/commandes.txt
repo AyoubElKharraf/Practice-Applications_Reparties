@@ -1,0 +1,57 @@
+=============================================================================
+           EXERCICE 2 : GUIDE DES COMMANDES (ESSENTIEL ET CONCIS)
+=============================================================================
+
+COMPILATION :
+  cd ex2_versions
+  make            # ou : make v1  /  make v2
+
+-----------------------------------------------------------------------------
+1. VERSION 1 : COMMUNICATION DISTANTE (MESSAGES & CONTROLE)
+-----------------------------------------------------------------------------
+Machine 1 (Serveur) :
+  ./serveur_v1 5000
+
+Machine 2 (Client distant) :
+  ping <IP_MACHINE_1>
+  ./client_v1 <IP_MACHINE_1> 5000
+
+Commandes dans le terminal client (v1>) :
+  ping                     -> Repond PONG (test de connectivite)
+  date                     -> Donne la date et l'heure du serveur distant
+  Bonjour machine 1        -> Envoie un message quelconque (echo recu)
+  quit                     -> Ferme la connexion
+
+-----------------------------------------------------------------------------
+2. VERSION 2 : TRANSFERT MULTI-DONNEES (FICHIERS BINAIRES, VIDEOS, IMAGES)
+-----------------------------------------------------------------------------
+Machine 1 (Serveur) :
+  # 1. Creer des donnees de test :
+  mkdir -p racine_ftp/docs
+  echo "Contenu texte" > racine_ftp/note.txt
+  head -c 3000000 /dev/urandom > racine_ftp/video.bin   # Fichier binaire 3 Mo
+
+  # 2. Lancer le serveur de donnees :
+  ./serveur_v2 5000 ./racine_ftp
+
+Machine 2 (Client distant) :
+  # 1. Creer une donnee locale a envoyer :
+  head -c 1048576 /dev/urandom > photo.png              # Fichier binaire 1 Mo
+
+  # 2. Se connecter au serveur :
+  ./client_v2 <IP_MACHINE_1> 5000
+
+Commandes dans le terminal client (v2>) :
+  ls                       -> Liste les fichiers du serveur
+  pwd                      -> Affiche le repertoire distant
+  put photo.png            -> Envoie un fichier local au serveur distant
+  get video.bin            -> Telecharge un fichier du serveur vers le client
+  cd docs                  -> Entre dans le dossier docs
+  cd ..                    -> Revient a la racine
+  cd ..                    -> REFUSE (securite sandbox)
+  quit                     -> Deconnexion
+
+Preuve d'integrite sans corruption (0 erreur) :
+  Machine 1 : sha256sum racine_ftp/video.bin
+  Machine 2 : sha256sum video.bin
+  -> Les empreintes SHA-256 sont identiques.
