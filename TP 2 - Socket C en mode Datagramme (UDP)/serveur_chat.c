@@ -23,12 +23,14 @@
 
 #define MAX_CLIENTS 10
 #define MSG_MAX     225   /* taille maximale d'un message                              */
-#define BUF_SIZE    256   /* tampon : 225 + préfixe "[ip:port]> " (25 max) + '\0' = 251 */
+#define BUF_SIZE    320   /* message + nom du client + adresse IP/port */
 #define CMD_QUIT    "/quit"
 #define ADDR_SIZE   22    /* "255.255.255.255:65535" = 21 caractères + '\0' */
 
 static struct sockaddr_in clients[MAX_CLIENTS];   /* adresses des clients en ligne */
+static int client_ids[MAX_CLIENTS];
 static int nb_clients = 0;
+static int next_client_id = 1;
 
 /* "a.b.c.d:port" (inet_ntop, contrairement à inet_ntoa, n'utilise pas de tampon statique) */
 static void addr_to_str(const struct sockaddr_in *a, char *out, size_t n) {
@@ -47,8 +49,10 @@ static int find_client(const struct sockaddr_in *a) {
 }
 
 static void remove_client(int idx) {
-    for (int i = idx; i < nb_clients - 1; i++)
+    for (int i = idx; i < nb_clients - 1; i++) {
         clients[i] = clients[i + 1];
+        client_ids[i] = client_ids[i + 1];
+    }
     nb_clients--;
 }
 
@@ -57,7 +61,7 @@ static void print_clients(void) {
     printf("Liste des clients en ligne :\n");
     for (int i = 0; i < nb_clients; i++) {
         addr_to_str(&clients[i], s, sizeof s);
-        printf("[%s]\n", s);
+        printf("Client %d [%s]\n", client_ids[i], s);
     }
 }
 
@@ -104,8 +108,9 @@ int main(int argc, char *argv[]) {
         /* extension : départ d'un client */
         if (strcmp(msg, CMD_QUIT) == 0) {
             if (idx >= 0) {
+                int departed_id = client_ids[idx];
                 remove_client(idx);
-                printf("Le client [%s] a quitté le chat\n", from);
+                printf("Client %d [%s] a quitté le chat\n", departed_id, from);
                 print_clients();
                 fflush(stdout);
             }
@@ -121,15 +126,17 @@ int main(int argc, char *argv[]) {
                 fflush(stdout);
                 continue;
             }
-            clients[nb_clients++] = addr_client;
+            clients[nb_clients] = addr_client;
+            client_ids[nb_clients] = next_client_id++;
+            nb_clients++;
             idx = nb_clients - 1;
         }
 
-        printf("Message : %s\n-> reçu du client [%s]\n", msg, from);
+        printf("Message : %s\n-> reçu de Client %d [%s]\n", msg, client_ids[idx], from);
 
         /* message envoyé aux autres : "[ip:port]> texte" */
         char out[BUF_SIZE];
-        snprintf(out, sizeof out, "[%s]> %s", from, msg);
+        snprintf(out, sizeof out, "Client %d [%s]> %s", client_ids[idx], from, msg);
 
         int envoyes = 0;
         for (int i = 0; i < nb_clients; i++) {
@@ -141,7 +148,7 @@ int main(int argc, char *argv[]) {
                 perror("sendto");
                 continue;
             }
-            printf("Message : %s\n-> envoyé à [%s]\n", msg, dest);
+            printf("Message : %s\n-> envoyé à Client %d [%s]\n", msg, client_ids[i], dest);
             envoyes++;
         }
         if (envoyes > 0)

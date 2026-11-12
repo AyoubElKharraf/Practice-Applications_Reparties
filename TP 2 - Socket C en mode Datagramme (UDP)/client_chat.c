@@ -5,12 +5,9 @@
  * Le client doit faire DEUX choses en même temps :
  *   - lire le clavier et envoyer les messages au serveur (sendto) ;
  *   - recevoir et afficher les messages des autres (recvfrom).
- * Ces deux opérations sont bloquantes : on utilise donc deux processus (fork),
- * qui partagent la même socket :
+ * Ces deux opérations sont bloquantes : on utilise donc deux processus (fork), qui partagent la même socket :
  *   - le PÈRE lit le clavier et envoie ;
  *   - le FILS reçoit et affiche.
- *
- * Pour quitter : "/quit", Ctrl+D ou Ctrl+C (le client prévient alors le serveur).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +21,7 @@
 #include <netdb.h>
 
 #define MSG_MAX   225
-#define BUF_SIZE  256
+#define BUF_SIZE  320   /* accommodates sender label, IP/port, and message */
 #define LINE_SIZE 1024
 #define CMD_QUIT  "/quit"
 
