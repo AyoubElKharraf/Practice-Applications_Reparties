@@ -98,3 +98,40 @@ make
 Calcul distant : multxy(12.00, 20.00) = 240.000000
 Calcul distant : puiss2(16) = 65536
 ```
+
+### 🚀 Instructions d'exécution (Linux / WSL / VM) :
+
+Rappel : Le protocole ONC/Sun RPC requiert le service d'enregistrement rpcbind (ou portmap).
+
+Activer le service RPC :
+
+bash
+sudo service rpcbind start
+
+Compiler le projet :
+
+bash
+make
+
+(Ou à la main : rpcgen calcule.x, puis compilation avec gcc tel qu'expliqué dans le README).
+
+Lancer le serveur en arrière-plan :
+
+bash
+./serveur &
+
+Vérifier l'enregistrement :
+
+bash
+rpcinfo -p
+
+Exécuter le client :
+
+bash
+./client_calcule localhost
+
+Résultat attendu :
+
+text
+Calcul distant : multxy(12.00, 20.00) = 240.000000
+Calcul distant : puiss2(16) = 65536
