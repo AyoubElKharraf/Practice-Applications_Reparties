@@ -22,7 +22,7 @@
 #include <arpa/inet.h>
 
 #define MAX_CLIENTS 10
-#define MSG_MAX     225   /* taille maximale d'un message                              */
+#define MSG_MAX     225   /* taille maximale d'un message        */
 #define BUF_SIZE    320   /* message + nom du client + adresse IP/port */
 #define CMD_QUIT    "/quit"
 #define ADDR_SIZE   22    /* "255.255.255.255:65535" = 21 caractères + '\0' */

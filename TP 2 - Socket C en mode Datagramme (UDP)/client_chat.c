@@ -20,21 +20,24 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define MSG_MAX   225
+#define MSG_MAX   225   /* la taille de message envoie ! */
 #define BUF_SIZE  320   /* accommodates sender label, IP/port, and message */
-#define LINE_SIZE 1024
+#define LINE_SIZE 1024  /* la taile en octect de ligne !*/
 #define CMD_QUIT  "/quit"
 
+/* controle les signaux d'utilisateurs, si faire CTRL+C ou \quit pour sortir !*/
 static volatile sig_atomic_t interrompu = 0;
 static void on_sigint(int sig) { (void)sig; interrompu = 1; }
 
+
+/* Point d'Entrée */
 int main(int argc, char *argv[]) {
     if (argc != 3) { fprintf(stderr, "Usage : %s <machine_serveur> <port>\n", argv[0]); return 1; }
     int port = atoi(argv[2]);
     if (port < 1 || port > 65535) { fprintf(stderr, "port invalide : %s\n", argv[2]); return 1; }
 
-    /* adresse du serveur */
-    struct hostent *host = gethostbyname(argv[1]);
+    /* adresse du serveur : établir la connexion entre client et le serveur */
+    struct hostent *host = gethostbyname(argv[1]);  // résout le ip de [1] dans la commande d'execution
     if (host == NULL) { fprintf(stderr, "machine inconnue : %s\n", argv[1]); return 1; }
     struct sockaddr_in addr_serveur;
     memset(&addr_serveur, 0, sizeof addr_serveur);
@@ -45,9 +48,9 @@ int main(int argc, char *argv[]) {
     int s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s == -1) { perror("socket"); return 1; }
 
-    /* Nommage explicite avec le port 0 : le système choisit un port libre.
-     * On le fait AVANT le fork pour que le père et le fils partagent la même
+    /* On le fait AVANT le fork pour que le père et le fils partagent la même
      * adresse locale (c'est elle que le serveur mémorise et utilise pour répondre). */
+    // le client construire le socket pour passe la connexion avec le serveur 
     struct sockaddr_in addr_locale;
     memset(&addr_locale, 0, sizeof addr_locale);
     addr_locale.sin_family = AF_INET;
