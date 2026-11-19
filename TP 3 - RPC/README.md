@@ -6,10 +6,10 @@ Ce dossier contient l'implémentation complète de l'exemple RPC avec les foncti
 
 ## 1. Structure des fichiers
 
-- [calcule.x](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Module%201%20-%20Applications%20R%C3%A9parties/TPs/TP%203%20-%20RPC/calcule.x) : Spécification IDL de l'interface RPC (structures, identifiant du programme `0x20000002`, version 1, numéros de procédures).
-- [calcule_server.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Module%201%20-%20Applications%20R%C3%A9parties/TPs/TP%203%20-%20RPC/calcule_server.c) : Implémentation côté serveur des deux fonctions (`puiss2_1_svc` et `multxy_1_svc`).
-- [client_calcule.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Module%201%20-%20Applications%20R%C3%A9parties/TPs/TP%203%20-%20RPC/client_calcule.c) : Programme client appelant les fonctions distantes via les stubs RPC.
-- [Makefile](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Module%201%20-%20Applications%20R%C3%A9parties/TPs/TP%203%20-%20RPC/Makefile) : Automatisation de la génération avec `rpcgen` et de la compilation.
+- [calcule.x] : Spécification IDL de l'interface RPC (structures, identifiant du programme `0x20000002`, version 1, numéros de procédures).
+- [calcule_server.c] : Implémentation côté serveur des deux fonctions (`puiss2_1_svc` et `multxy_1_svc`).
+- [client_calcule.c] : Programme client appelant les fonctions distantes via les stubs RPC.
+- [Makefile] : Automatisation de la génération avec `rpcgen` et de la compilation.
 
 ---
 
