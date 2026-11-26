@@ -6,6 +6,7 @@
 #ifndef _CALCULE_H_RPCGEN
 #define _CALCULE_H_RPCGEN
 
+ // Importe toute l'API RPC standard du système
 #include <rpc/rpc.h>
 
 
@@ -39,7 +40,8 @@ extern  int * puiss2_1_svc();
 #define MULTXY 2
 extern  float * multxy_1();
 extern  float * multxy_1_svc();
-extern int maths_prog_1_freeresult ();
+extern int maths_prog_1_freeresult (); // La fonction de nettoyage mémoire : C'est une fonction générée automatiquement pour le serveur afin de libérer 
+									   //la mémoire allouée par les routines XDR après avoir envoyé la réponse au client.
 #endif /* K&R C */
 
 /* the xdr functions */

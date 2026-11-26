@@ -146,7 +146,7 @@ Examinons chaque composant présent dans votre projet.
 
 ### 5.1 L'interface IDL : `calcule.x`
 
-Le fichier [calcule.x](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Module%201%20-%20Applications%20R%C3%A9parties/TPs/TP%203%20-%20RPC/calcule.x) est le contrat d'interface. Il définit les types échangés et les signatures des procédures distantes.
+Le fichier [calcule.x] : est le contrat d'interface. Il définit les types échangés et les signatures des procédures distantes.
 
 ```c
 /* 1. Déclaration d'une structure de données échangée */
@@ -178,7 +178,7 @@ program MATHS_PROG {
 
 ### 5.2 Le Serveur Réparti : `calcule_server.c`
 
-Ce fichier [calcule_server.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Module%201%20-%20Applications%20R%C3%A9parties/TPs/TP%203%20-%20RPC/calcule_server.c) contient la logique métier implémentée par le développeur.
+Ce fichier [calcule_server.c] : contient la logique métier implémentée par le développeur.
 
 ```c
 #include "calcule.h"
@@ -229,7 +229,7 @@ float *multxy_1_svc(operandes *argp, struct svc_req *rqstp) {
 
 ### 5.3 Le Client : `client_calcule.c`
 
-Le fichier [client_calcule.c](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Module%201%20-%20Applications%20R%C3%A9parties/TPs/TP%203%20-%20RPC/client_calcule.c) est l'application cliente consommant le service distant.
+Le fichier [client_calcule.c] : est l'application cliente consommant le service distant.
 
 ```c
 #include <stdio.h>
@@ -330,7 +330,7 @@ Lors de l'exécution de `rpcgen calcule.x`, 4 fichiers sont produits :
 
 ### 5.5 L'automatisation : `Makefile`
 
-Le [Makefile](file:///c:/Users/DELL/Documents/Master/Master_M2I/SEMESTRE%203/Module%201%20-%20Applications%20R%C3%A9parties/TPs/TP%203%20-%20RPC/Makefile) orchestre l'ensemble du processus de compilation :
+Le [Makefile] : orchestre l'ensemble du processus de compilation :
 
 ```makefile
 CC = gcc

@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
             ssize_t n = recvfrom(s, buf, BUF_SIZE - 1, 0, NULL, NULL);
             if (n < 0) { perror("recvfrom"); break; }
             buf[n] = '\0';
-            printf("%s\n", buf);
+            printf("%s\n", buf);c
             fflush(stdout);
         }
         exit(1);

@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
     /* 1. création de la socket UDP */
     int s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s == -1) { perror("socket"); return 1; }
-    printf("Socket créée avec succès ! (%d)\n", s);
+    printf("Socket créée avec succès !\n");
 
     /* 2. nommage : le serveur doit être joignable sur un port connu des clients */
     struct sockaddr_in addr_serveur;

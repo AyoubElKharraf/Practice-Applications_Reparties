@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "ma.ump.grpc";
+option java_outer_classname = "CalculeProto";
+
+package calcule;
+
+service CalculService {
+  // 1. Unaire : Calcule 2^n
+  rpc Puiss2 (Puiss2Request) returns (Puiss2Reply);
+
+  // 2. Unaire : Calcule x * y
+  rpc MultXY (MultXYRequest) returns (MultXYReply);
+
+  // 3. Server Streaming : Calcule et diffuse 2^0 jusqu'à 2^n
+  rpc GenererPuissances (Puiss2Request) returns (stream Puiss2Reply);
+
+  // 4. Streaming Bidirectionnel : Flux continu de (x, y) et réponses au fil de l'eau
+  rpc MultStream (stream MultXYRequest) returns (stream MultXYReply);
+}
+
+message Puiss2Request {
+  int32 n = 1;
+}
+
+message Puiss2Reply {
+  int32 exposant = 1;
+  int64 resultat = 2;
+}
+
+message MultXYRequest {
+  float x = 1;
+  float y = 2;
+}
+
+message MultXYReply {
+  float resultat = 1;
+}
