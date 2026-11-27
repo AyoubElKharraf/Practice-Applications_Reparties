@@ -6,18 +6,16 @@
 #ifndef _CALCULE_H_RPCGEN
 #define _CALCULE_H_RPCGEN
 
- // Importe toute l'API RPC standard du système
+// Importe toute l'API RPC standard du système
 #include <rpc/rpc.h>
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
 struct operandes {
-	float x;
-	float y;
+  float x;
+  float y;
 };
 typedef struct operandes operandes;
 
@@ -26,31 +24,35 @@ typedef struct operandes operandes;
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define PUISS2 1
-extern  int * puiss2_1(int *, CLIENT *);
-extern  int * puiss2_1_svc(int *, struct svc_req *);
+extern int *puiss2_1(int *, CLIENT *);
+extern int *puiss2_1_svc(int *, struct svc_req *);
 #define MULTXY 2
-extern  float * multxy_1(operandes *, CLIENT *);
-extern  float * multxy_1_svc(operandes *, struct svc_req *);
-extern int maths_prog_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
+extern float *multxy_1(operandes *, CLIENT *);
+extern float *multxy_1_svc(operandes *, struct svc_req *);
+extern int maths_prog_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define PUISS2 1
-extern  int * puiss2_1();
-extern  int * puiss2_1_svc();
+extern int *puiss2_1();
+extern int *puiss2_1_svc();
 #define MULTXY 2
-extern  float * multxy_1();
-extern  float * multxy_1_svc();
-extern int maths_prog_1_freeresult (); // La fonction de nettoyage mémoire : C'est une fonction générée automatiquement pour le serveur afin de libérer 
-									   //la mémoire allouée par les routines XDR après avoir envoyé la réponse au client.
+extern float *multxy_1();
+extern float *multxy_1_svc();
+extern int
+maths_prog_1_freeresult(); // La fonction de nettoyage mémoire : C'est une
+                           // fonction générée automatiquement pour le serveur
+                           // afin de libérer la mémoire allouée par les
+                           // routines XDR après avoir envoyé la réponse au
+                           // client.
 #endif /* K&R C */
 
 /* the xdr functions */
 
 #if defined(__STDC__) || defined(__cplusplus)
-extern  bool_t xdr_operandes (XDR *, operandes*);
+extern bool_t xdr_operandes(XDR *, operandes *);
 
 #else /* K&R C */
-extern bool_t xdr_operandes ();
+extern bool_t xdr_operandes();
 
 #endif /* K&R C */
 
